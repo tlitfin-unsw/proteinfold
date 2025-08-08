@@ -65,7 +65,7 @@ workflow MSA {
         .map{[["id": it.baseName], it]}
         .set {ch_input_seqs}
 
-        ch_input_seqs.view()
+        //ch_input_seqs.view()
 
         MMSEQS_COLABFOLDSEARCH (
             ch_input_seqs,
@@ -86,8 +86,8 @@ workflow MSA {
             )
             .map{[it[1], it[2]]}
         )
-        MMSEQS_COLABFOLDSEARCH.out.a3m.view()
-        ch_a3m.view()    
+        //MMSEQS_COLABFOLDSEARCH.out.a3m.view()
+        //ch_a3m.view()    
     }
 
     emit:

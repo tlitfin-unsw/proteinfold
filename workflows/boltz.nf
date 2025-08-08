@@ -85,28 +85,7 @@ workflow BOLTZ {
         }
         .set{ch_input}
 
-    if (!msa_server){
-        MULTIFASTA_TO_CSV(
-            ch_input.multimer
-        )
-        ch_versions = ch_versions.mix(MULTIFASTA_TO_CSV.out.versions)
-
-        MMSEQS_COLABFOLDSEARCH (
-                ch_input.monomer.mix(MULTIFASTA_TO_CSV.out.input_csv),
-                ch_colabfold_db,
-                ch_uniref30
-        )
-        ch_versions = ch_versions.mix(MMSEQS_COLABFOLDSEARCH.out.versions)
-    ch_multiqc_files = Channel.empty()
-
-    ch_samplesheet
-        .branch {
-            fasta: it[1].extension == "fasta" || it[1].extension == "fa"
-            yaml: it[1].extension == "yaml" || it[1].extension == "yml"
-        }
-        .set { ch_input_by_ext }
-
-    if (!msa_server){
+     if (!msa_server){
         MSA(
             ch_samplesheet,
             ch_colabfold_db,
@@ -190,8 +169,6 @@ workflow BOLTZ {
     RUN_BOLTZ(
         ch_boltz_input.map{[it[0], it[1]]},
         ch_boltz_input.map{it[2]},
-        ch_boltz_input.map{[it[0], it[1]]},
-        ch_boltz_input.map{it[2]},
         ch_boltz_model,
         ch_boltz_ccd,
         ch_boltz2_aff,
@@ -208,8 +185,8 @@ workflow BOLTZ {
     RUN_BOLTZ
         .out
         .msa
-    .map{it[0].model = "boltz"; it}
-    .set {ch_msa}
+        .map{it[0].model = "boltz"; it}
+        .set {ch_msa}
 
     RUN_BOLTZ
         .out
