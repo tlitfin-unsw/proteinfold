@@ -36,11 +36,12 @@ workflow COLABFOLD {
     main:
     ch_multiqc_report = Channel.empty()
 
-    if (params.colabfold_server == 'webserver') {
+    if (params.use_msa_server) {
         //
         // MODULE: Run colabfold
         //
-        if (params.colabfold_model_preset != 'alphafold2_ptm' && params.colabfold_model_preset != 'alphafold2') {
+        if (colabfold_model_preset != 'alphafold2_ptm' && colabfold_model_preset != 'alphafold2') {
+            //Multimer mode
             MULTIFASTA_TO_CSV(
                 ch_samplesheet
             )
@@ -66,7 +67,7 @@ workflow COLABFOLD {
             ch_versions = ch_versions.mix(COLABFOLD_BATCH.out.versions)
         }
 
-    } else if (params.colabfold_server == 'local') {
+    } else {
         //
         // MODULE: Run mmseqs
         //
@@ -105,20 +106,22 @@ workflow COLABFOLD {
     COLABFOLD_BATCH
         .out
         .pdb
-    .map{
-        meta = it[0].clone();
-        meta.model = "colabfold";
-        [meta, it[1]]
-    }
-    .set{ch_pdb_final}
+        .map{
+            meta = it[0].clone();
+            meta.model = "colabfold";
+            [meta, it[1]]
+        }
+        .set{ch_pdb_final}
 
-    COLABFOLD_BATCH.out.msa
-    .map{
-        meta = it[0].clone();
-        meta.model = "colabfold";
-        [meta, it[1]]
-    }
-    .set{ch_msa_final}
+    COLABFOLD_BATCH
+        .out
+        .msa
+        .map{
+            meta = it[0].clone();
+            meta.model = "colabfold";
+            [meta, it[1]]
+        }
+        .set{ch_msa_final}
 
     COLABFOLD_BATCH
         .out

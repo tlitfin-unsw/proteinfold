@@ -48,12 +48,55 @@ workflow BOLTZ {
     ch_versions     // channel: [ path(versions.yml) ]
     ch_boltz_ccd    // channel: [ path(boltz_ccd) ]
     ch_boltz_model  // channel: [ path(model) ]
+    ch_boltz2_aff   // channel: [ path(boltz2_aff) ]
+    ch_boltz2_conf  // channel: [ path(boltz2_conf) ]
+    ch_mols         // channel: [ path(mols) ]
     ch_colabfold_db // channel: [ path(colabfold_db) ]
     ch_uniref30     // channel: [ path(uniref30) ]
     msa_server
     mmseq_batch_size
 
     main:
+    ch_samplesheet
+        .branch {
+            fasta: it[1].extension == "fasta" || it[1].extension == "fa"
+            yaml: it[1].extension == "yaml" || it[1].extension == "yml"
+        }
+        .set { ch_input_by_ext }
+
+    ch_input_by_ext.fasta
+        .join(
+            ch_input_by_ext.fasta
+                .map { meta, file ->
+                    [
+                        meta,
+                        file.text.findAll { letter -> letter == ">" }.size()
+                    ]
+                }
+        )
+        .map{
+            def meta = it[0].clone()
+            meta.cnt = it[2]
+            [meta, it[1]]
+        }
+        .branch{
+            multimer: it[0].cnt > 1
+            monomer: it[0].cnt == 1
+        }
+        .set{ch_input}
+
+    if (!msa_server){
+        MULTIFASTA_TO_CSV(
+            ch_input.multimer
+        )
+        ch_versions = ch_versions.mix(MULTIFASTA_TO_CSV.out.versions)
+
+        MMSEQS_COLABFOLDSEARCH (
+                ch_input.monomer.mix(MULTIFASTA_TO_CSV.out.input_csv),
+                ch_colabfold_db,
+                ch_uniref30
+        )
+        ch_versions = ch_versions.mix(MMSEQS_COLABFOLDSEARCH.out.versions)
     ch_multiqc_files = Channel.empty()
 
     ch_samplesheet
@@ -147,8 +190,13 @@ workflow BOLTZ {
     RUN_BOLTZ(
         ch_boltz_input.map{[it[0], it[1]]},
         ch_boltz_input.map{it[2]},
+        ch_boltz_input.map{[it[0], it[1]]},
+        ch_boltz_input.map{it[2]},
         ch_boltz_model,
-        ch_boltz_ccd
+        ch_boltz_ccd,
+        ch_boltz2_aff,
+        ch_boltz2_conf,
+        ch_mols
     )
 
     RUN_BOLTZ
