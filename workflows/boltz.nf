@@ -107,18 +107,11 @@ workflow BOLTZ {
             meta.cnt = it[2]
             [meta, it[1]]
         }
-        .branch{
-            multimer: it[0].cnt > 1
-            monomer: it[0].cnt == 1
-        }
         .set{ch_input}
 
         ch_input_by_ext.yaml.mix(
         ch_input
-        .multimer
-        .mix(ch_input
-        .monomer
-        )).map{[it[0], it[1], []]}
+        ).map{[it[0], it[1], []]}
         .set{ch_prepare_fasta}
     }
 
