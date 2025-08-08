@@ -44,6 +44,8 @@ def parse_msa(msa_path, output_dir):
 
         homologs_lengths = [int(x.strip()) for x in first_line.replace("#", "").split()[0].split(",")]
         sequence_groups = [[[], []] for _ in range(len(homologs_lengths))]
+        #arities = [int(x.strip()) for x in first_line.replace("#", "").split()[1].split(",")]
+        #max_arity = max(arities)
 
         header_line = file.readline().strip()[1:]
         expected_section_headers = [x.strip() for x in header_line.split()]
@@ -92,13 +94,19 @@ def parse_msa(msa_path, output_dir):
         filename = os.path.join(output_dir, f"{ID_CHARS[seq_index]}.csv")
         with open(filename, "w") as out_file:
             out_file.write("key,sequence\n")
-            paired_sequences = sequence_groups[seq_index][0]
-            for i, seq in enumerate(paired_sequences, start=1):
-                out_file.write(f"{i},{seq}\n")
+            if len(homologs_lengths)==1: #Homo-oligomer: all sequences are paired
+                paired_sequences = sequence_groups[seq_index][0]+sequence_groups[seq_index][1]
+                print(sequence_groups)
+                for i, seq in enumerate(paired_sequences):
+                    out_file.write(f"{i},{seq}\n")
+            else:
+                paired_sequences = sequence_groups[seq_index][0]
+                for i, seq in enumerate(paired_sequences, start=1):
+                    out_file.write(f"{i},{seq}\n")
 
-            unpaired_sequences = sequence_groups[seq_index][1]
-            for seq in unpaired_sequences:
-                out_file.write(f"-1,{seq}\n")
+                unpaired_sequences = sequence_groups[seq_index][1]
+                for seq in unpaired_sequences:
+                    out_file.write(f"-1,{seq}\n")
 
 
 def main():
