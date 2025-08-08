@@ -64,28 +64,7 @@ workflow BOLTZ {
         }
         .set { ch_input_by_ext }
 
-    ch_input_by_ext.fasta
-        .join(
-            ch_input_by_ext.fasta
-                .map { meta, file ->
-                    [
-                        meta,
-                        file.text.findAll { letter -> letter == ">" }.size()
-                    ]
-                }
-        )
-        .map{
-            def meta = it[0].clone()
-            meta.cnt = it[2]
-            [meta, it[1]]
-        }
-        .branch{
-            multimer: it[0].cnt > 1
-            monomer: it[0].cnt == 1
-        }
-        .set{ch_input}
-
-     if (!msa_server){
+    if (!msa_server){
         MSA(
             ch_samplesheet,
             ch_colabfold_db,
@@ -185,6 +164,8 @@ workflow BOLTZ {
     RUN_BOLTZ
         .out
         .msa
+        .map{it[0].model = "boltz"; it}
+        .set {ch_msa}
         .map{it[0].model = "boltz"; it}
         .set {ch_msa}
 
