@@ -74,21 +74,16 @@ workflow BOLTZ {
 
         ch_versions = ch_versions.mix(MSA.out.versions)
         MSA.out.formated_input
-        .branch{
-            multimer: it[0].cnt > 1
-            monomer: it[0].cnt == 1
-        }
-        .set{ch_input}
+            .set{ch_input}
+        ch_input.view()
 
         SPLIT_MSA(
-            MSA.out.a3m.filter{it[0].cnt > 1}
+            MSA.out.a3m
         )
+        MSA.out.a3m.view()
         ch_versions = ch_versions.mix(SPLIT_MSA.out.versions)
-        ch_input.monomer
-            .join(MSA.out.a3m.filter{it[0].cnt == 1})
-            .mix(
-                ch_input.multimer.join(SPLIT_MSA.out.msa_csv)
-            ).set{ch_prepare_fasta}
+        ch_input.join(SPLIT_MSA.out.msa_csv)
+            .set{ch_prepare_fasta}
 
     }else{
         ch_input_by_ext.fasta
