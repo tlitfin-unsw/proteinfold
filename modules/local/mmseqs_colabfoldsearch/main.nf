@@ -28,7 +28,8 @@ process MMSEQS_COLABFOLDSEARCH {
         $args \\
         --threads $task.cpus ${fasta} \\
         ./db \\
-        "result/"
+        "result/" \\
+        --unpack 1
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
