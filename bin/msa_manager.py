@@ -43,13 +43,13 @@ def parse_msa(msa_path, output_dir):
             #return
             homologs_lengths = [len(file.readline().strip('\n'))]
             sequence_groups = [[[],[]]]
-            is_multimer = True
+            is_multimer = False
         else:
             homologs_lengths = [int(x.strip()) for x in first_line.replace("#", "").split()[0].split(",")]
             sequence_groups = [[[], []] for _ in range(len(homologs_lengths))]
             #arities = [int(x.strip()) for x in first_line.replace("#", "").split()[1].split(",")]
             #max_arity = max(arities)
-            is_multimer = False
+            is_multimer = True
 
     with open(msa_path, "r") as file:        
         if is_multimer:
@@ -69,11 +69,13 @@ def parse_msa(msa_path, output_dir):
                         for seq_index in range(len(homologs_lengths)):
                             if section_index == 0:
                                 if len(sequence_groups[seq_index][0]) < MAX_PAIRED_SEQS:
-                                    sequence_groups[seq_index][0].append(sub_sequences[seq_index])
+                                    #if len(set(sub_sequences[seq_index])-set(['-']))>0:
+                                        sequence_groups[seq_index][0].append(sub_sequences[seq_index])
                             else:
                                 if seq_index == section_index - 1:
                                     if len(sequence_groups[seq_index][1]) + len(sequence_groups[seq_index][0]) < MAX_MSA_SEQS:
-                                        sequence_groups[seq_index][1].append(sub_sequences[seq_index])
+                                        #if len(set(sub_sequences[seq_index])-set(['-']))>0:
+                                            sequence_groups[seq_index][1].append(sub_sequences[seq_index])
 
                 homolog = ""
                 current_header = line[1:].strip()
@@ -91,11 +93,13 @@ def parse_msa(msa_path, output_dir):
                 for seq_index in range(len(homologs_lengths)):
                     if section_index == 0:
                         if len(sequence_groups[seq_index][0]) < MAX_PAIRED_SEQS:
-                            sequence_groups[seq_index][0].append(sub_sequences[seq_index])
+                            #if len(set(sub_sequences[seq_index])-set(['-']))>0:
+                                sequence_groups[seq_index][0].append(sub_sequences[seq_index])
                     else:
                         if seq_index == section_index - 1:
                             if len(sequence_groups[seq_index][1]) + len(sequence_groups[seq_index][0]) < MAX_MSA_SEQS:
-                                sequence_groups[seq_index][1].append(sub_sequences[seq_index])
+                                #if len(set(sub_sequences[seq_index])-set(['-']))>0:
+                                    sequence_groups[seq_index][1].append(sub_sequences[seq_index])
 
     for seq_index in range(len(homologs_lengths)):
         filename = os.path.join(output_dir, f"{ID_CHARS[seq_index]}.csv")
